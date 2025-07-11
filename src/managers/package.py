@@ -11,6 +11,28 @@ class Package:
         self.name = self.json["info"]["name"]
         self.version = self.json["info"]["version"]
         self.releases = self.json["releases"]
+        # Calculate update_type and store in json
+        self.json["update_type"] = self._calculate_update_type()
+
+    def _calculate_update_type(self):
+        """
+        Internal method to determine if the latest version is a major, minor, or patch update
+        """
+        try:
+            current = parse(self.current_version)
+            latest = parse(self.latest_version)
+        except InvalidVersion:
+            return None
+        if current == latest:
+            return None
+        if hasattr(current, "major") and hasattr(latest, "major"):
+            if latest.major > current.major:
+                return "major"
+            elif latest.minor > current.minor:
+                return "minor"
+            elif latest.micro > current.micro:
+                return "patch"
+        return None
 
     @property
     def current_version(self):
@@ -20,6 +42,20 @@ class Package:
     def latest_version(self):
         version_str = self.parse_versions_for_latest().__str__()
         return version_str
+
+    @property
+    def update_type(self):
+        return self.json.get("update_type")
+
+    @property
+    def repository_url(self):
+        """
+        Returns the repository URL from project_urls.Source if present, otherwise None.
+        """
+        project_urls = self.json["info"].get("project_urls", {})
+        if isinstance(project_urls, dict):
+            return project_urls.get("Source")
+        return None
 
     def parse_versions_for_latest(self):
         """
