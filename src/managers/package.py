@@ -46,11 +46,15 @@ class Package:
     @property
     def repository_url(self):
         """
-        Returns the repository URL from project_urls.Source if present, otherwise None.
+        Returns the repository URL from project_urls in order of preference:
+        Changelog, Changes, Release log, Repository, then Source. Returns the first one found or None.
         """
         project_urls = self.json["info"].get("project_urls", {})
         if isinstance(project_urls, dict):
-            return project_urls.get("Source")
+            # Check in order of preference
+            for key in ["Changelog", "Changes", "Release log", "Repository", "Source"]:
+                if key in project_urls:
+                    return project_urls[key]
         return None
 
     def parse_versions_for_latest(self):

@@ -72,7 +72,7 @@ class HTMLReporter:
     def write_report(self):
         self.report += self.report_header
 
-        production_section = self._heading("Production Dependencies")
+        production_section = self._heading("Main Dependencies")
         production_section += self._open_table("striped")
         production_section += self._table_header(["Package", "Installed Version", "Latest Version", "Status"])
         for data in self.production_data:

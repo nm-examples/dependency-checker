@@ -40,14 +40,23 @@ def package_table_row(frozen, package):
     if frozen_version and frozen_version != latest_version:
         if "git+https://" in frozen_version:
             status = "Check"
-            style = "red1"
+            style = "white"
+            frozen_version = "Forked package"
         else:
             status = "Outdated"
-            style = "yellow1"
+            # Set color based on update type
+            if update_type == "major":
+                style = "red1"
+            elif update_type == "minor":
+                style = "yellow1"
+            elif update_type == "patch":
+                style = "orange1"
+            else:
+                style = "yellow1"  # fallback for when update_type is None
     elif not frozen_version:
         status = "Check"
-        style = "cyan1"
-        frozen_version = "Unable to determine version"
+        style = "white"
+        frozen_version = "Unknown version"
     else:
         status = "OK"
         style = "green3"
@@ -56,9 +65,13 @@ def package_table_row(frozen, package):
     if update_type:
         status = f"{status} ({update_type})"
 
-    if "git+https://" in frozen_version:
-        frozen_version = frozen_version.replace("git+https://", "")
-        frozen_version = f"{frozen_version.split('@')[0]} TAG {frozen_version.split('@')[1]}"
+        # If it's a major update, add the repository URL if available
+        if update_type == "major":
+            repo_url = package.repository_url
+            if repo_url:
+                status = f"{status}\n{repo_url}"
+
+    # No need to process git URLs anymore since we set frozen_version to "Forked package"
     return name, latest_version, frozen_version, status, style
 
 
