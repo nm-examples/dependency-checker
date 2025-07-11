@@ -51,22 +51,47 @@ class HTMLReporter:
         return header
 
     def _table_dependency_row(self, data: dict, status_class: str) -> str:
+        # Handle status that might contain newlines (repository URLs)
+        status_content = data["Status"]
+
+        # Check if there's a URL on a new line (for major updates)
+        if "\n" in status_content:
+            status_parts = status_content.split("\n")
+            status_text = status_parts[0]
+            url = status_parts[1]
+            # Make the URL a clickable link
+            status_content = f"{status_text}<br><a href='{url}' target='_blank'>{url}</a>"
+
         return f"""
             <tr>
                 <td><span class='{status_class}'>{data['Package']}</span></td>
-                <td>{data['Installed Version']}</td>
-                <td>{data['Latest Version']}</td>
-                <td><span class='{status_class}'>{data['Status']}</span></td>
+                <td><span class='{status_class}'>{data['Installed Version']}</span></td>
+                <td><span class='{status_class}'>{data['Latest Version']}</span></td>
+                <td><span class='{status_class}'>{status_content}</span></td>
             </tr>"""
 
     def _gather_status_class(self, data: list) -> str:
-        status_class = "pico-color-red-500"
-        if data["Status"] == "Check":
-            status_class = "pico-color-cyan-500"
-        elif data["Status"] == "Outdated":
-            status_class = "pico-color-orange-500"
-        elif data["Status"] == "OK":
-            status_class = "pico-color-green-500"
+        status = data["Status"]
+
+        # Extract the base status (before any parentheses or newlines)
+        base_status = status.split("(")[0].split("\n")[0].strip()
+
+        # Check for update types in the status
+        if "(major)" in status:
+            status_class = "pico-color-red-500"  # Red for major updates
+        elif "(minor)" in status:
+            status_class = "pico-color-amber-500"  # Yellow for minor updates
+        elif "(patch)" in status:
+            status_class = "pico-color-pinmpkin-500"  # Orange for patch updates
+        elif base_status == "Check":
+            status_class = "pico-color-gray-500"  # White/gray for check
+        elif base_status == "Outdated":
+            status_class = "pico-color-amber-500"  # Yellow fallback for outdated
+        elif base_status == "OK":
+            status_class = "pico-color-green-500"  # Green for up to date
+        else:
+            status_class = "pico-color-gray-500"  # Default fallback
+
         return status_class
 
     def write_report(self):
