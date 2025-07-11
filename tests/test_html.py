@@ -142,7 +142,7 @@ def test_gather_status_class():
     }
 
     reporter = HTMLReporter()
-    assert reporter._gather_status_class(data) == "pico-color-pinmpkin-500"
+    assert reporter._gather_status_class(data) == "pico-color-pumpkin-500"
 
 
 def test_write_report():
