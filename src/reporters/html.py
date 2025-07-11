@@ -53,6 +53,7 @@ class HTMLReporter:
     def _table_dependency_row(self, data: dict, status_class: str) -> str:
         # Handle status that might contain newlines (repository URLs)
         status_content = data["Status"]
+        ai_chat_request = ""
 
         # Check if there's a URL on a new line (for major updates)
         if "\n" in status_content:
@@ -61,13 +62,28 @@ class HTMLReporter:
             url = status_parts[1]
             # Make the URL a clickable link
             status_content = f"{status_text}<br><a href='{url}' target='_blank'>{url}</a>"
+            ai_chat_request += (
+                f"explain if there are breaking changes for this major version upgrade "
+                f"for this package {data['Package']} at {url} "
+                f"from version {data['Installed Version']} to version {data['Latest Version']} "
+            )
+
+        if ai_chat_request:
+            ai_chat_request = f"""<br><br>
+            <details name="example">
+                <summary>Suggested AI Chat Request</summary>
+                <p><textarea>{ai_chat_request}</textarea></p>
+            </details>"""
 
         return f"""
             <tr>
                 <td><span class='{status_class}'>{data['Package']}</span></td>
                 <td><span class='{status_class}'>{data['Installed Version']}</span></td>
                 <td><span class='{status_class}'>{data['Latest Version']}</span></td>
-                <td><span class='{status_class}'>{status_content}</span></td>
+                <td>
+                    <span class='{status_class}'>{status_content}</span>
+                    {ai_chat_request}
+                </td>
             </tr>"""
 
     def _gather_status_class(self, data: list) -> str:
