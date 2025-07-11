@@ -1,87 +1,119 @@
-# Python dependency version checker
+# Dependency Checker
 
 ![Icon](./docs/icon.png?raw=true "Icon")
 
+A tool to report outdated dependencies in Python projects using Poetry.
+
+## Table of Contents
+
+- [Why use this tool?](#why-use-this-tool)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Options](#options)
+- [How it works](#how-it-works)
+- [Limitations](#limitations)
+
 ## Why use this tool?
 
-If you are using Poetry for python dependency management it can help you to decide if you need to update a dependency or not.
+If you're using Poetry for Python dependency management, this tool helps you decide whether you need to update dependencies.
 
-e.g. your `pyproject.toml` file may have a version range specified, but it may not be clear if the version in the lock file is the latest allowed by your range in the pyproject.toml file
+For example, your `pyproject.toml` file may have a version range specified, but it may not be clear if the version in the lock file is the latest allowed by your range in the `pyproject.toml` file.
 
-You could run poetry show [dependency] to get the installed version, then pop over to PyPi to check the latest version but if you have a lot of dependencies, this can be time-consuming, so let this tool do it for you.
+You could run `poetry show [dependency]` to get the installed version, then check PyPI for the latest version. However, if you have many dependencies, this can be time-consuming—let this tool do it for you.
 
 ## Requirements
 
 - Python 3.11+
-- UV https://docs.astral.sh/uv/
+- [UV](https://docs.astral.sh/uv/) - Python package manager
 
 ## Installation
 
-Clone this repository and run the following commands in the root of the project:
+1. Clone this repository:
 
-## Activate the virtual environment
+   ```bash
+   git clone https://github.com/nm-examples/dependency-checker.git
+   cd dependency-checker
+   ```
 
-This isn't strictly necessary but it is recommended to allow command completion for folder paths when checking a local repository.
+2. Create and activate a virtual environment (optional but recommended):
 
-```
-uv venv
-source .venv/bin/activate
-```
+   ```bash
+   uv venv
+   source .venv/bin/activate
+   ```
+
+   This step isn't strictly necessary but is recommended to enable command completion for folder paths when checking local repositories.
 
 ## Usage
 
+### Basic Commands
+
 Without activating the virtual environment:
 
-```
+```bash
 uv run check [-r] [local or remote]
 ```
 
 With the virtual environment activated:
 
-```
+```bash
 check [-r] [local or remote]
 ```
 
-If you run `uv check` without any arguments, it will display the help docs.
+If you run the command without any arguments, it will display the help documentation.
 
-Steps:
+### Workflow
 
-- Enter the url for your remote repository or the path to your local repository
-- Choose the branch to checkout and run the report on
-- If multiple Dockerfiles are found, choose the one to inspect
+1. Enter the URL for your remote repository or the path to your local repository
+2. Choose the branch to checkout and run the report on
+3. If multiple Dockerfiles are found, choose the one to inspect
 
 ## Options
 
-`-r` - Output a printable report to a file (report.html) View with `open report.html`
+| Option | Description |
+|--------|-------------|
+| `-r` | Output a printable report to a file (`report.html`). View with `open report.html` |
+| `local` | Check a local repository (a folder relative to the directory this script is run from) |
+| `remote` | Check a remote repository |
 
-`local` - Check a local repository (a folder relative to the directory this script is run from)
+### Getting Help
 
-`remote` - Check a remote repository
+Command help is available for all commands:
 
-Command help is available:
-
-```
+```bash
 uv run check --help
 uv run check remote --help
 uv run check local --help
 ```
 
-## Limitations
-
-- Only works if the Dockerfile uses poetry to install dependencies
-
 ## How it works
 
-It will do the following:
+The tool performs the following steps:
 
-- clone the repository and checkout the specified branch for a remote repository
-- analyse the local folder if running against a local repository
-- find & inspect the Dockerfile to find the docker image version and poetry version used
-- build a new image based on the Dockerfile image and export the dependency list using poetry export -> requirements-frozen.txt
-- compare each dependency version in requirements-frozen.txt with the latest version on PyPi if it is listed in the pyproject.toml file
-- output the results in the console and indicate if there are any outdated dependencies and/or manual checks required
-- optionally output a report to a file
+1. **Repository handling**:
+   - Clones the repository and checks out the specified branch (for remote repositories)
+   - Analyzes the local folder (for local repositories)
 
-e.g. Console output
+2. **Docker analysis**:
+   - Finds and inspects the Dockerfile to identify the Docker image version and Poetry version used
 
-![Console ouput](./docs/console.jpg?raw=true "Console output")
+3. **Dependency extraction**:
+   - Builds a new image based on the Dockerfile
+   - Exports the dependency list using `poetry export` to `requirements-frozen.txt`
+
+4. **Version comparison**:
+   - Compares each dependency version in `requirements-frozen.txt` with the latest version on PyPI
+   - Only checks dependencies listed in the `pyproject.toml` file
+
+5. **Reporting**:
+   - Outputs results in the console indicating outdated dependencies and manual checks required
+   - Optionally generates an HTML report file
+
+### Example Console Output
+
+![Console output](./docs/screen.jpg "Console output")
+
+## Limitations
+
+- Only works if the Dockerfile uses Poetry to install dependencies

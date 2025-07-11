@@ -21,6 +21,20 @@ class Package:
         version_str = self.parse_versions_for_latest().__str__()
         return version_str
 
+    @property
+    def repository_url(self):
+        """
+        Returns the repository URL from project_urls in order of preference:
+        Changelog, Changes, Release log, Repository, then Source. Returns the first one found or None.
+        """
+        project_urls = self.json["info"].get("project_urls", {})
+        if isinstance(project_urls, dict):
+            # Check in order of preference
+            for key in ["Changelog", "Changes", "Release log", "Repository", "Source"]:
+                if key in project_urls:
+                    return project_urls[key]
+        return None
+
     def parse_versions_for_latest(self):
         """
         Parse the versions and return the latest version

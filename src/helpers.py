@@ -1,31 +1,77 @@
+from packaging.version import InvalidVersion, parse
 from rich import box
 from rich.table import Table
 from src.client import PyPiClient
 from src.managers.package import Package
 
 
+def calculate_update_type(current_version, latest_version):
+    """
+    Calculate if the latest version is a major, minor, or patch update compared to the current version.
+    Returns one of: 'major', 'minor', 'patch', or None.
+    """
+    try:
+        current = parse(current_version)
+        latest = parse(latest_version)
+    except InvalidVersion:
+        return None
+    if current == latest:
+        return None
+    if hasattr(current, "major") and hasattr(latest, "major"):
+        if latest.major > current.major:
+            return "major"
+        elif latest.minor > current.minor:
+            return "minor"
+        elif latest.micro > current.micro:
+            return "patch"
+    return None
+
+
 def package_table_row(frozen, package):
     name = package.name
     latest_version = package.latest_version
     frozen_version = frozen.dependencies.get(name.lower())
+
+    # Calculate update_type based on frozen version vs latest version
+    update_type = None
+    if frozen_version and frozen_version != latest_version and "git+https://" not in frozen_version:
+        update_type = calculate_update_type(frozen_version, latest_version)
+
     if frozen_version and frozen_version != latest_version:
         if "git+https://" in frozen_version:
             status = "Check"
-            style = "red1"
+            style = "white"
+            frozen_version = "Forked package"
         else:
             status = "Outdated"
-            style = "yellow1"
+            # Set color based on update type
+            if update_type == "major":
+                style = "red1"
+            elif update_type == "minor":
+                style = "yellow1"
+            elif update_type == "patch":
+                style = "orange1"
+            else:
+                style = "yellow1"  # fallback for when update_type is None
     elif not frozen_version:
         status = "Check"
-        style = "cyan1"
-        frozen_version = "Unable to determine version"
+        style = "white"
+        frozen_version = "Unknown version"
     else:
         status = "OK"
         style = "green3"
 
-    if "git+https://" in frozen_version:
-        frozen_version = frozen_version.replace("git+https://", "")
-        frozen_version = f"{frozen_version.split('@')[0]} TAG {frozen_version.split('@')[1]}"
+    # Always reflect update_type if present
+    if update_type:
+        status = f"{status} ({update_type})"
+
+        # If it's a major update, add the repository URL if available
+        if update_type == "major":
+            repo_url = package.repository_url
+            if repo_url:
+                status = f"{status}\n{repo_url}"
+
+    # No need to process git URLs anymore since we set frozen_version to "Forked package"
     return name, latest_version, frozen_version, status, style
 
 

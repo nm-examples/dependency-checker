@@ -51,28 +51,69 @@ class HTMLReporter:
         return header
 
     def _table_dependency_row(self, data: dict, status_class: str) -> str:
+        # Handle status that might contain newlines (repository URLs)
+        status_content = data["Status"]
+        ai_chat_request = ""
+
+        # Check if there's a URL on a new line (for major updates)
+        if "\n" in status_content:
+            status_parts = status_content.split("\n")
+            status_text = status_parts[0]
+            url = status_parts[1]
+            # Make the URL a clickable link
+            status_content = f"{status_text}<br><a href='{url}' target='_blank'>{url}</a>"
+            ai_chat_request += (
+                f"explain if there are breaking changes for this major version upgrade "
+                f"for this package {data['Package']} at {url} "
+                f"from version {data['Installed Version']} to version {data['Latest Version']} "
+            )
+
+        if ai_chat_request:
+            ai_chat_request = f"""<br><br>
+            <details name="example">
+                <summary>Suggested AI Chat Request</summary>
+                <p><textarea>{ai_chat_request}</textarea></p>
+            </details>"""
+
         return f"""
             <tr>
                 <td><span class='{status_class}'>{data['Package']}</span></td>
-                <td>{data['Installed Version']}</td>
-                <td>{data['Latest Version']}</td>
-                <td><span class='{status_class}'>{data['Status']}</span></td>
+                <td><span class='{status_class}'>{data['Installed Version']}</span></td>
+                <td><span class='{status_class}'>{data['Latest Version']}</span></td>
+                <td>
+                    <span class='{status_class}'>{status_content}</span>
+                    {ai_chat_request}
+                </td>
             </tr>"""
 
     def _gather_status_class(self, data: list) -> str:
-        status_class = "pico-color-red-500"
-        if data["Status"] == "Check":
-            status_class = "pico-color-cyan-500"
-        elif data["Status"] == "Outdated":
-            status_class = "pico-color-orange-500"
-        elif data["Status"] == "OK":
-            status_class = "pico-color-green-500"
+        status = data["Status"]
+
+        # Extract the base status (before any parentheses or newlines)
+        base_status = status.split("(")[0].split("\n")[0].strip()
+
+        # Check for update types in the status
+        if "(major)" in status:
+            status_class = "pico-color-red-500"  # Red for major updates
+        elif "(minor)" in status:
+            status_class = "pico-color-amber-500"  # Yellow for minor updates
+        elif "(patch)" in status:
+            status_class = "pico-color-pumpkin-500"  # Orange for patch updates
+        elif base_status == "Check":
+            status_class = "pico-color-gray-500"  # White/gray for check
+        elif base_status == "Outdated":
+            status_class = "pico-color-amber-500"  # Yellow fallback for outdated
+        elif base_status == "OK":
+            status_class = "pico-color-green-500"  # Green for up to date
+        else:
+            status_class = "pico-color-gray-500"  # Default fallback
+
         return status_class
 
     def write_report(self):
         self.report += self.report_header
 
-        production_section = self._heading("Production Dependencies")
+        production_section = self._heading("Main Dependencies")
         production_section += self._open_table("striped")
         production_section += self._table_header(["Package", "Installed Version", "Latest Version", "Status"])
         for data in self.production_data:
