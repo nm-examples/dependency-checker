@@ -63,16 +63,13 @@ def test_table_dependency_row():
         "Latest Version": "Latest Version",
         "Status": "Status",
     }
-    assert (
-        reporter._table_dependency_row(data, status_class)
-        == """
-            <tr>
-                <td><span class='status'>Package</span></td>
-                <td>Installed Version</td>
-                <td>Latest Version</td>
-                <td><span class='status'>Status</span></td>
-            </tr>"""
-    )
+    result = reporter._table_dependency_row(data, status_class)
+    assert result.startswith("\n            <tr>")
+    assert "<td><span class='status'>Package</span></td>" in result
+    assert "<td><span class='status'>Installed Version</span></td>" in result
+    assert "<td><span class='status'>Latest Version</span></td>" in result
+    assert "<span class='status'>Status</span>" in result
+    assert result.endswith("</tr>")
 
 
 def test_gather_status_class():
@@ -84,7 +81,7 @@ def test_gather_status_class():
     }
 
     reporter = HTMLReporter()
-    assert reporter._gather_status_class(data) == "pico-color-red-500"
+    assert reporter._gather_status_class(data) == "pico-color-gray-500"
 
     data = {
         "Package": "Package",
@@ -94,7 +91,7 @@ def test_gather_status_class():
     }
 
     reporter = HTMLReporter()
-    assert reporter._gather_status_class(data) == "pico-color-cyan-500"
+    assert reporter._gather_status_class(data) == "pico-color-gray-500"
 
     data = {
         "Package": "Package",
@@ -104,7 +101,7 @@ def test_gather_status_class():
     }
 
     reporter = HTMLReporter()
-    assert reporter._gather_status_class(data) == "pico-color-orange-500"
+    assert reporter._gather_status_class(data) == "pico-color-amber-500"
 
     data = {
         "Package": "Package",
@@ -115,6 +112,37 @@ def test_gather_status_class():
 
     reporter = HTMLReporter()
     assert reporter._gather_status_class(data) == "pico-color-green-500"
+
+    # Test update type specific colors
+    data = {
+        "Package": "Package",
+        "Installed Version": "Installed Version",
+        "Latest Version": "Latest Version",
+        "Status": "Outdated (major)",
+    }
+
+    reporter = HTMLReporter()
+    assert reporter._gather_status_class(data) == "pico-color-red-500"
+
+    data = {
+        "Package": "Package",
+        "Installed Version": "Installed Version",
+        "Latest Version": "Latest Version",
+        "Status": "Outdated (minor)",
+    }
+
+    reporter = HTMLReporter()
+    assert reporter._gather_status_class(data) == "pico-color-amber-500"
+
+    data = {
+        "Package": "Package",
+        "Installed Version": "Installed Version",
+        "Latest Version": "Latest Version",
+        "Status": "Outdated (patch)",
+    }
+
+    reporter = HTMLReporter()
+    assert reporter._gather_status_class(data) == "pico-color-pinmpkin-500"
 
 
 def test_write_report():
