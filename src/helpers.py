@@ -1,13 +1,42 @@
+from packaging.version import InvalidVersion, parse
 from rich import box
 from rich.table import Table
 from src.client import PyPiClient
 from src.managers.package import Package
 
 
+def calculate_update_type(current_version, latest_version):
+    """
+    Calculate if the latest version is a major, minor, or patch update compared to the current version.
+    Returns one of: 'major', 'minor', 'patch', or None.
+    """
+    try:
+        current = parse(current_version)
+        latest = parse(latest_version)
+    except InvalidVersion:
+        return None
+    if current == latest:
+        return None
+    if hasattr(current, "major") and hasattr(latest, "major"):
+        if latest.major > current.major:
+            return "major"
+        elif latest.minor > current.minor:
+            return "minor"
+        elif latest.micro > current.micro:
+            return "patch"
+    return None
+
+
 def package_table_row(frozen, package):
     name = package.name
     latest_version = package.latest_version
     frozen_version = frozen.dependencies.get(name.lower())
+
+    # Calculate update_type based on frozen version vs latest version
+    update_type = None
+    if frozen_version and frozen_version != latest_version and "git+https://" not in frozen_version:
+        update_type = calculate_update_type(frozen_version, latest_version)
+
     if frozen_version and frozen_version != latest_version:
         if "git+https://" in frozen_version:
             status = "Check"
@@ -22,6 +51,10 @@ def package_table_row(frozen, package):
     else:
         status = "OK"
         style = "green3"
+
+    # Always reflect update_type if present
+    if update_type:
+        status = f"{status} ({update_type})"
 
     if "git+https://" in frozen_version:
         frozen_version = frozen_version.replace("git+https://", "")

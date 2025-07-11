@@ -11,12 +11,21 @@ class Package:
         self.name = self.json["info"]["name"]
         self.version = self.json["info"]["version"]
         self.releases = self.json["releases"]
-        # Calculate update_type and store in json
-        self.json["update_type"] = self._calculate_update_type()
 
-    def _calculate_update_type(self):
+    @property
+    def current_version(self):
+        return self.version
+
+    @property
+    def latest_version(self):
+        version_str = self.parse_versions_for_latest().__str__()
+        return version_str
+
+    @property
+    def update_type(self):
         """
-        Internal method to determine if the latest version is a major, minor, or patch update
+        Determine if the latest version is a major, minor, or patch update compared to the current version.
+        Returns one of: 'major', 'minor', 'patch', or None if not applicable.
         """
         try:
             current = parse(self.current_version)
@@ -33,19 +42,6 @@ class Package:
             elif latest.micro > current.micro:
                 return "patch"
         return None
-
-    @property
-    def current_version(self):
-        return self.version
-
-    @property
-    def latest_version(self):
-        version_str = self.parse_versions_for_latest().__str__()
-        return version_str
-
-    @property
-    def update_type(self):
-        return self.json.get("update_type")
 
     @property
     def repository_url(self):
