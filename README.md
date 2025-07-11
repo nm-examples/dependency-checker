@@ -108,7 +108,7 @@ The tool performs the following steps:
 
 5. **Reporting**:
    - Outputs results in the console indicating outdated dependencies and manual checks required
-   - Optionally generates an HTML report file
+   - Optionally generates an HTML report file. Experimenal - For major version upgrades, it will include a pre-prepared pormpt you can use AI tools like ChatGPT to help you with determining if the upgrade is safe or not when breaking changes are present.
 
 ### Example Console Output
 
