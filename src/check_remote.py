@@ -121,7 +121,7 @@ def check_remote(repo_url, report):
 
     # Main dependencies
     dependencies = sorted(toml.dependencies.keys())
-    table = dependency_table_header(title="Main Dependencies", subtitle=f"Branch: {branch_name}")
+    table = dependency_table_header(title="Main Dependencies")
 
     production_packages = get_packages(dependencies, messages)
 

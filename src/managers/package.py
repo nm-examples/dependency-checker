@@ -22,28 +22,6 @@ class Package:
         return version_str
 
     @property
-    def update_type(self):
-        """
-        Determine if the latest version is a major, minor, or patch update compared to the current version.
-        Returns one of: 'major', 'minor', 'patch', or None if not applicable.
-        """
-        try:
-            current = parse(self.current_version)
-            latest = parse(self.latest_version)
-        except InvalidVersion:
-            return None
-        if current == latest:
-            return None
-        if hasattr(current, "major") and hasattr(latest, "major"):
-            if latest.major > current.major:
-                return "major"
-            elif latest.minor > current.minor:
-                return "minor"
-            elif latest.micro > current.micro:
-                return "patch"
-        return None
-
-    @property
     def repository_url(self):
         """
         Returns the repository URL from project_urls in order of preference:
