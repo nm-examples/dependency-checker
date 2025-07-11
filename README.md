@@ -84,4 +84,4 @@ It will do the following:
 
 e.g. Console output
 
-![Console ouput](./docs/console.jpg?raw=true "Console output")
+![Console ouput](./docs/screen.jpg "Console output")
