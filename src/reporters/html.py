@@ -98,7 +98,7 @@ class HTMLReporter:
         elif "(minor)" in status:
             status_class = "pico-color-amber-500"  # Yellow for minor updates
         elif "(patch)" in status:
-            status_class = "pico-color-pinmpkin-500"  # Orange for patch updates
+            status_class = "pico-color-pumpkin-500"  # Orange for patch updates
         elif base_status == "Check":
             status_class = "pico-color-gray-500"  # White/gray for check
         elif base_status == "Outdated":
